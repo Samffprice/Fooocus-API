@@ -174,6 +174,49 @@ def describe_image(
     result = interrogator(img)
     return DescribeImageResponse(describe=result)
 
+from extras.inpaint_mask import generate_mask_from_image
+
+
+
+
+@secure_router.post(
+    path="/v1/tools/generate-mask",
+    tags=["GenerateV1"])
+async def generate_mask_route(
+    image: UploadFile,
+    mask_model: str,
+    cloth_category: str,
+    sam_prompt_text: str,
+    sam_model: str,
+    sam_quant: str,
+    box_threshold: float,
+    text_threshold: float):
+    """
+    Generate a mask from an image
+    Arguments:
+        image {UploadFile} -- Image to generate mask from
+        mask_model {str} -- Mask model to use
+        cloth_category {str} -- Cloth category (only used if mask_model is 'u2net_cloth_seg')
+        sam_prompt_text {str} -- SAM prompt text (only used if mask_model is 'sam')
+        sam_model {str} -- SAM model (only used if mask_model is 'sam')
+        sam_quant {str} -- SAM quant (only used if mask_model is 'sam')
+        box_threshold {float} -- Box threshold (only used if mask_model is 'sam')
+        text_threshold {float} -- Text threshold (only used if mask_model is 'sam')
+    Returns:
+        dict -- Dictionary containing the filename and the generated mask
+    """
+    image_data = await image.read()
+    extras = {}
+    if mask_model == 'u2net_cloth_seg':
+        extras['cloth_category'] = cloth_category
+    elif mask_model == 'sam':
+        extras['sam_prompt_text'] = sam_prompt_text
+        extras['sam_model'] = sam_model
+        extras['sam_quant'] = sam_quant
+        extras['box_threshold'] = box_threshold
+        extras['text_threshold'] = text_threshold
+    mask = generate_mask_from_image(image_data, mask_model, extras)
+    return {"filename": image.filename, "mask": mask}
 
 @secure_router.post(
         path="/v1/generation/stop",

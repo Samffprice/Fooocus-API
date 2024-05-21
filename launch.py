@@ -19,7 +19,9 @@ from threading import Thread
 from fooocusapi.utils.logger import logger
 from fooocusapi.utils.tools import run_pip, check_torch_cuda, requirements_check
 from fooocus_api_version import version
+from repositories.Fooocus.modules import config
 
+os.environ["U2NET_HOME"] = config.path_inpaint
 script_path = os.path.dirname(os.path.realpath(__file__))
 module_path = os.path.join(script_path, "repositories/Fooocus")
 
